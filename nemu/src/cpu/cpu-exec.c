@@ -17,7 +17,7 @@
 #include <cpu/decode.h>
 #include <cpu/difftest.h>
 #include <locale.h>
-
+#include "../monitor/sdb/sdb.h"
 /* The assembly code of instructions executed is only output to the screen
  * when the number of instructions executed is less than this value.
  * This is useful when you use the `si' command.
@@ -32,12 +32,31 @@ static bool g_print_step = false;
 
 void device_update();
 
-static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
-#ifdef CONFIG_ITRACE_COND
-  if (ITRACE_COND) { log_write("%s\n", _this->logbuf); }
-#endif
-  if (g_print_step) { IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); }
-  IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
+static void trace_and_difftest(Decode *_this, vaddr_t dnpc) 
+{
+  #ifdef CONFIG_ITRACE_COND
+    if (ITRACE_COND) { log_write("%s\n", _this->logbuf); }
+  #endif
+    if (g_print_step) { IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); }
+    IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
+  #ifdef CONFIG_WATCHPOINT
+    WP *wp = head;
+    bool success = true;
+    while(wp!=NULL)
+    {
+      uint32_t new = expr(wp->expr,&success);
+      if(success &&(new!=wp->value))
+      {
+        
+        printf("Watchpoint %d: %s changed from 0x%x to 0x%x\n", 
+        wp->NO, wp->expr, wp->value, new);
+        wp->value = new;
+        nemu_state.state = NEMU_STOP;
+        continue;
+      }
+      wp = wp->next;
+    }
+  #endif
 }
 
 static void exec_once(Decode *s, vaddr_t pc) {
@@ -126,3 +145,4 @@ void cpu_exec(uint64_t n) {
     case NEMU_QUIT: statistic();
   }
 }
+
