@@ -155,6 +155,9 @@ config WATCHPOINT
   bool "Enable watchpoints"
   default n
 
+config IRINGBUF
+  bool "ringbuffer of instructions"
+  default n
 
 config DIFFTEST
   depends on TARGET_NATIVE_ELF

@@ -50,9 +50,39 @@ void init_mem() {
   Log("physical memory area [" FMT_PADDR ", " FMT_PADDR "]", PMEM_LEFT, PMEM_RIGHT);
 }
 
+void log_pmem_read(paddr_t addr,int len)
+{
+  char str[128];
+  sprintf(str,"pc:0x%08x    addr:0x%08x   data:0x%08x",cpu.pc,addr,pmem_read(addr,len));
+  FILE *file = fopen("./pmemread_log.txt","a");
+  if(file == NULL)
+  {
+    panic("txt file opened failed");
+  }
+  fputs(str,file);
+  fclose(file);
+}
+
+void log_pmem_write(paddr_t addr,word_t data)
+{
+  char str[128];
+  sprintf(str,"pc:0x%08x    addr:0x%08x   data:0x%08x",cpu.pc,addr,data);
+  FILE *file = fopen("./pmemwrite_log.txt","a");
+  if(file == NULL)
+  {
+    panic("txt file opened failed");
+  }
+  fputs(str,file);
+  fclose(file);
+}
+
+
 word_t paddr_read(paddr_t addr, int len) {
   if (likely(in_pmem(addr))) return pmem_read(addr, len);
   IFDEF(CONFIG_DEVICE, return mmio_read(addr, len));
+#ifdef CONFIG_MTRACE
+  log_pmem_read(addr,len);
+#endif
   out_of_bound(addr);
   return 0;
 }
@@ -60,5 +90,8 @@ word_t paddr_read(paddr_t addr, int len) {
 void paddr_write(paddr_t addr, int len, word_t data) {
   if (likely(in_pmem(addr))) { pmem_write(addr, len, data); return; }
   IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); return);
+#ifdef CONFIG_MTRACE
+  log_pmem_write(addr,data);
+#endif
   out_of_bound(addr);
 }
