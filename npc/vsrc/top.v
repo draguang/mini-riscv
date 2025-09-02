@@ -6,7 +6,7 @@ module top(
     import "DPI-C" function byte unsigned pmem_read_ram(input int raddr);
     import "DPI-C" function int pmem_read_rom(input int raddr);
     import "DPI-C" function void pmem_write(
-    input int waddr, input int wdata, input int wmask);
+    input int unsigned waddr, input int unsigned wdata, input int wmask);
     export "DPI-C" function trap;
     function int trap();
         return is_ebreak?1:0;
@@ -20,8 +20,8 @@ module top(
     wire [31:0]decode;
     wire [31:0]snpc;
     wire [31:0]dnpc;
-    wire [4:0]raddr1;
-    wire [4:0]raddr2;
+    wire [3:0]raddr1;
+    wire [3:0]raddr2;
     wire [31:0]src1;
     wire [31:0]src2;
     wire [4:0]waddr;
@@ -31,9 +31,9 @@ module top(
     wire gpr_wen;
     wire is_ebreak;
     assign is_jalr = (fetch==3'b001)?1:0;
-    assign decode = pmem_read_rom(pc_data_out)
-    assign raddr1 = decode[19:15];
-    assign raddr2 = decode[24:20];
+    assign decode = pmem_read_rom(pc_data_out);
+    assign raddr1 = decode[18:15];
+    assign raddr2 = decode[23:20];
     mux_32_2 pc_mux(
         .data1(snpc),
         .data2(dnpc),
@@ -60,7 +60,7 @@ module top(
         .is_ebreak(is_ebreak),
         .gpr_wen(gpr_wen)
     );
-    RegisterFile gpr(
+    RegisterFile #(.ADDR_WIDTH(4))gpr(
         .rst(rst),
         .clk(clk),
         .wen(gpr_wen),

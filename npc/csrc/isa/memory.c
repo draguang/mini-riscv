@@ -31,7 +31,7 @@ void load(const char* filename,uint8_t*rom,size_t max)
   }
 }
 
-extern "C" uint8_t pmem_read_ram(int raddr){
+extern "C" uint8_t pmem_read_ram(uint32_t raddr){
   switch(raddr-(raddr&~0x3u))
   {
     case 0:return ram[raddr&~0x3u];
@@ -42,22 +42,23 @@ extern "C" uint8_t pmem_read_ram(int raddr){
   }
   
 }
-extern "C" int pmem_read_rom(int raddr){
+extern "C" int pmem_read_rom(uint32_t raddr){
   if(raddr>=0xa0000048&&raddr<=0xa0000050) {
     time_t now = time(NULL);
     return (int)now;
   }
   return rom[raddr & ~0x3u]|rom[(raddr & ~0x3u)+1]<<8|rom[(raddr & ~0x3u)+2]<<16|rom[(raddr & ~0x3u)+3]<<24;
 }
-extern "C" void pmem_write(int waddr, int wdata, int wmask){
+
+extern "C" void pmem_write(uint32_t waddr, uint32_t wdata, int wmask){
   if(waddr>=0xa00003f8&&waddr<=0xa0000400) {putchar(wdata);}
-  int waddr_a = waddr & ~0x3u;
-  int32_t original_data = 
+  uint32_t waddr_a = waddr & ~0x3u;
+  uint32_t original_data = 
         (ram[waddr_a])           |
         (ram[waddr_a + 1] << 8)  |
         (ram[waddr_a + 2] << 16) |
         (ram[waddr_a + 3] << 24);
-  int32_t new_data = original_data;
+  uint32_t new_data = original_data;
     if (wmask & 0x1) new_data = (new_data & ~0x000000FFu) | (wdata & 0x000000FFu);
     if (wmask & 0x2) new_data = (new_data & ~0x0000FF00u) | (wdata & 0x0000FF00u); 
     if (wmask & 0x4) new_data = (new_data & ~0x00FF0000u) | (wdata & 0x00FF0000u); 

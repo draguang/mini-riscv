@@ -60,7 +60,7 @@ uint32_t isa_reg_str2val(const char *s, bool *success);
 void isa_reg_display();
 void wp_monitor();
 extern "C" {
-    uint8_t pmem_read_ram(int raddr);
+    uint8_t pmem_read_ram(uint32_t raddr);
 }
 extern WP *head;
 
