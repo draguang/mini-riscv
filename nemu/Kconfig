@@ -159,6 +159,10 @@ config IRINGBUF
   bool "ringbuffer of instructions"
   default n
 
+config FTRACE
+  bool "tracing of function"
+  default n
+
 config DIFFTEST
   depends on TARGET_NATIVE_ELF
   bool "Enable differential testing"

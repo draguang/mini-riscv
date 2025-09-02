@@ -20,6 +20,10 @@
 #include <macro.h>
 #include <generated/autoconf.h>
 
+void difftest_init(int port);
+void difftest_regcpy(void *dut, bool direction);
+void difftest_exec(uint64_t n);
+
 #define __EXPORT __attribute__((visibility("default")))
 enum { DIFFTEST_TO_DUT, DIFFTEST_TO_REF };
 

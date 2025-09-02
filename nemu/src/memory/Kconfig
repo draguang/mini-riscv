@@ -18,6 +18,10 @@ config MTRACE
   bool "memory tracing"
   default n
 
+config DTRACE
+  bool "device tracing"
+  default n
+  
 choice
   prompt "Physical memory definition"
   default PMEM_GARRAY

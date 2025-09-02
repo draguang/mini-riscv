@@ -39,7 +39,7 @@ int printf(const char *fmt, ...) {
         }
         case 'c':
         {
-          char chr = va_arg(args,int);
+          char chr = (char)va_arg(args,int);
           putch(chr);
           count++;
           break;
@@ -90,6 +90,7 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
 int int_to_str(char*out,int*position,int num)
 {
   char buf[16];
+  int start_pos = *position;
   int count = 0;
   do{
     buf[count++] = '0'+(num%10);
@@ -99,7 +100,7 @@ int int_to_str(char*out,int*position,int num)
   {
     out[*position++] = buf[count];
   }
-  return count;
+  return *position - start_pos;
 }
 
 int sprintf(char *out, const char *fmt, ...) {
@@ -114,6 +115,13 @@ int sprintf(char *out, const char *fmt, ...) {
       fmt++;
       switch(*fmt)
       {
+        case 'c':
+        {
+          char chr = (char)va_arg(args,int);
+          out[pos++] = chr;
+          count++;
+          break;
+        }
         case 's':
         {
           char *str = va_arg(args,char*);
@@ -133,6 +141,7 @@ int sprintf(char *out, const char *fmt, ...) {
         default:
         {
           out[pos++] = *fmt;
+          count++;
           break;
         }
       }
@@ -140,6 +149,7 @@ int sprintf(char *out, const char *fmt, ...) {
     else
     {
       out[pos++] = *fmt;
+      count++;
     }
     fmt++;
   }

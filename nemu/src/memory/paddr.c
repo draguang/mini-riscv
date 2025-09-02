@@ -53,8 +53,8 @@ void init_mem() {
 void log_pmem_read(paddr_t addr,int len)
 {
   char str[128];
-  sprintf(str,"pc:0x%08x    addr:0x%08x   data:0x%08x",cpu.pc,addr,pmem_read(addr,len));
-  FILE *file = fopen("./pmemread_log.txt","a");
+  sprintf(str,"pc:0x%08x    addr:0x%08x   data:0x%08x\n",cpu.pc,addr,pmem_read(addr,len));
+  FILE *file = fopen("/home/guanglong/ysyx-workbench/nemu/trace/pmemread_log.txt","a");
   if(file == NULL)
   {
     panic("txt file opened failed");
@@ -66,8 +66,8 @@ void log_pmem_read(paddr_t addr,int len)
 void log_pmem_write(paddr_t addr,word_t data)
 {
   char str[128];
-  sprintf(str,"pc:0x%08x    addr:0x%08x   data:0x%08x",cpu.pc,addr,data);
-  FILE *file = fopen("./pmemwrite_log.txt","a");
+  sprintf(str,"pc:0x%08x    addr:0x%08x   data:0x%08x\n",cpu.pc,addr,data);
+  FILE *file = fopen("/home/guanglong/ysyx-workbench/nemu/trace/pmemwrite_log.txt","a");
   if(file == NULL)
   {
     panic("txt file opened failed");
@@ -78,20 +78,20 @@ void log_pmem_write(paddr_t addr,word_t data)
 
 
 word_t paddr_read(paddr_t addr, int len) {
-  if (likely(in_pmem(addr))) return pmem_read(addr, len);
-  IFDEF(CONFIG_DEVICE, return mmio_read(addr, len));
 #ifdef CONFIG_MTRACE
   log_pmem_read(addr,len);
 #endif
+  if (likely(in_pmem(addr))) return pmem_read(addr, len);
+  IFDEF(CONFIG_DEVICE, return mmio_read(addr, len));
   out_of_bound(addr);
   return 0;
 }
 
 void paddr_write(paddr_t addr, int len, word_t data) {
-  if (likely(in_pmem(addr))) { pmem_write(addr, len, data); return; }
-  IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); return);
 #ifdef CONFIG_MTRACE
   log_pmem_write(addr,data);
 #endif
+  if (likely(in_pmem(addr))) { pmem_write(addr, len, data); return; }
+  IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); return);
   out_of_bound(addr);
 }

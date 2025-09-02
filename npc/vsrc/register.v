@@ -6,7 +6,7 @@ module register #(DATA_WIDTH = 32)(
     output reg [DATA_WIDTH-1:0]q
 );
     always@(posedge clk) begin
-        if(rst) q<=32'h00000000;
+        if(rst) q<=32'h80000000;
         else if(en)  q<=p;
     end
 endmodule

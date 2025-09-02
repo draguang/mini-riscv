@@ -71,14 +71,14 @@ static inline void update_screen() {
 #endif
 #endif
 
-static bool get_sync_h()
+static bool get_sync()
 {
-  return MUXDEF(CONFIG_TARGET_AM, io_read(AM_GPU_FBDRAW).sync,0);
+  return MUXDEF(CONFIG_TARGET_AM, io_read(AM_GPU_FBDRAW).sync, true);
 }
 
 void vga_update_screen() {
-  bool sync = get_sync_h;
-  if(sync!=false) update_screen();
+  bool sync = get_sync();
+  if(sync == true) update_screen();
   sync = false;
 }
 

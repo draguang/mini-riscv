@@ -3,13 +3,17 @@ module top(
     input rst
 );
     /* verilator lint_off WIDTHTRUNC */
-    import "DPI-C" function byte signed pmem_read_ram(input int raddr);
+    import "DPI-C" function byte unsigned pmem_read_ram(input int raddr);
     import "DPI-C" function int pmem_read_rom(input int raddr);
     import "DPI-C" function void pmem_write(
     input int waddr, input int wdata, input int wmask);
     export "DPI-C" function trap;
     function int trap();
         return is_ebreak?1:0;
+    endfunction
+    export "DPI-C" function get_pc;
+    function int get_pc();
+        get_pc = pc_data_out;
     endfunction
     wire [31:0]pc_data_in;
     wire [31:0]pc_data_out;
@@ -27,7 +31,7 @@ module top(
     wire gpr_wen;
     wire is_ebreak;
     assign is_jalr = (fetch==3'b001)?1:0;
-    assign decode = pmem_read_rom(pc_data_out);
+    assign decode = pmem_read_rom(pc_data_out)
     assign raddr1 = decode[19:15];
     assign raddr2 = decode[24:20];
     mux_32_2 pc_mux(

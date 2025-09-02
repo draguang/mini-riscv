@@ -12,15 +12,13 @@
 *
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
-#include <isa.h>
-#include <stdbool.h>
+#include "common.h"
 /* We use the POSIX regex functions to process regular expressions.
  * Type 'man regex' for more information about POSIX regex functions.
  */
-#include <regex.h>
-#include <memory/paddr.h>
 bool check_parentheses(int p, int q);
 int is_operator(int type);
+extern uint8_t pmem_read_ram(int raddr);
 enum {
   TK_NOTYPE = 256, TK_EQ,
   TK_NUM,DEREF,TK_NEQ,TK_AND,
@@ -79,7 +77,6 @@ void init_regex() {
     ret = regcomp(&re[i], rules[i].regex, REG_EXTENDED);
     if (ret != 0) {
       regerror(ret, &re[i], error_msg, 128);
-      panic("regex compilation failed: %s\n%s", error_msg, rules[i].regex);
     }
   }
 }
@@ -96,22 +93,21 @@ static bool make_token(char *e) {
   int position = 0;
   int i;
   regmatch_t pmatch;
-
   nr_token = 0;
 
   while (e[position] != '\0') {
     /* Try all rules one by one. */
     for (i = 0; i < NR_REGEX; i ++) {
-      if(nr_token == 2047)
+      if(nr_token == 2047){
         memset(tokens,0,sizeof(tokens));
-      printf("e:%s\n",(char *)e);
-      if (regexec(&re[i], e + position, 1, &pmatch, 0) == 0 && pmatch.rm_so == 0) {
+      }
+      init_regex();
+      if (regexec(&re[i], e + position, 1, &pmatch, 0) == 0 && pmatch.rm_so == 0){
         char *substr_start = e + position;
         int substr_len = pmatch.rm_eo;
-
-        //Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
+        
+        //printf("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
             //i, rules[i].regex, position, substr_len, substr_len, substr_start);
-
         position += substr_len;
 
         /* TODO: Now a new token is recognized with rules[i]. Add codes
@@ -276,7 +272,12 @@ uint32_t eval(int p,int q)
       {
           addr = eval(p+1, q);     
       }
-      return paddr_read(addr, 4);  
+      printf("Dereferencing addr: 0x%x\n", addr);
+      return   pmem_read_ram(addr+3)<<24|
+               pmem_read_ram(addr+2)<<16|
+               pmem_read_ram(addr+1)<<8|
+               pmem_read_ram(addr);
+      return 0;
     }
     for(int i = p;i<q+1;i++)
     {

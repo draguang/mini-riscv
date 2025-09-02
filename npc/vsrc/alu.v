@@ -12,7 +12,7 @@ module alu(
     output reg is_ebreak
 );
     /* verilator lint_off WIDTHTRUNC */
-    import "DPI-C" function byte signed pmem_read_ram(input int raddr);
+    import "DPI-C" function byte unsigned pmem_read_ram(input int raddr);
     import "DPI-C" function void pmem_write(
     input int waddr, input int wdata, input int wmask);
     reg [11:0]imm_i;

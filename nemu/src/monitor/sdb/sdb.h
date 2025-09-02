@@ -32,7 +32,6 @@ extern WP *head;
 void init_wp_pool();
 WP *newwp();
 void free_wp(WP *wp);
-uint32_t expr(char *e, bool *success);
 void print_wp();
 int delete_watchpoint(int no);
 #endif

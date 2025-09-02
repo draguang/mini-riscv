@@ -18,9 +18,17 @@
 
 #include <common.h>
 
+typedef struct{
+  word_t mepc;
+  word_t mstatus;
+  word_t mcause;
+  word_t mtvec;
+}CSR;
+
 typedef struct {
   word_t gpr[MUXDEF(CONFIG_RVE, 16, 32)];
   vaddr_t pc;
+  CSR csr;//控制状态寄存器
 } MUXDEF(CONFIG_RV64, riscv64_CPU_state, riscv32_CPU_state);
 
 // decode
@@ -29,5 +37,7 @@ typedef struct {
 } MUXDEF(CONFIG_RV64, riscv64_ISADecodeInfo, riscv32_ISADecodeInfo);
 
 #define isa_mmu_check(vaddr, len, type) (MMU_DIRECT)
+
+
 
 #endif

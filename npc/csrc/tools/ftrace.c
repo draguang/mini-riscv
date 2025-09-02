@@ -1,8 +1,14 @@
-#include <common.h>
+#include "common.h"
 #include <elf.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
+
+void panic(const char *sen)
+{
+    printf("%s",sen);
+    exit(1);
+}
 typedef struct mytab{
     char *strtab_data;
     Elf32_Sym*symbols;
@@ -46,7 +52,7 @@ Tab parse_args_ftrace(const char *path)
         panic("cannot read header");
     }
     //读取节区名称字符串表
-    char *shstrtab = malloc(shdr[ehdr.e_shstrndx].sh_size);
+    char *shstrtab = (char*)malloc(shdr[ehdr.e_shstrndx].sh_size);
     if (!shstrtab) {
         free(shdr);
         fclose(elf_file);
@@ -76,7 +82,7 @@ Tab parse_args_ftrace(const char *path)
         panic("sections not found");
     }
     //加载字符串表数据
-    char *strtab_data = malloc(strtab->sh_size);
+    char *strtab_data = (char*)malloc(strtab->sh_size);
     if (!strtab_data) {
         free(shstrtab);
         free(shdr);
@@ -93,7 +99,7 @@ Tab parse_args_ftrace(const char *path)
         panic("string table read failed");
     }
     //加载符号表数据
-    Elf32_Sym* symbols = malloc(symtab->sh_size);
+    Elf32_Sym* symbols = (Elf32_Sym*)malloc(symtab->sh_size);
     if(!symbols)
     {
         free(shstrtab);
@@ -122,7 +128,7 @@ void init_ftrace(const char *path)
 {
     if(!path)   panic("path no");
     if(!tab_data) {
-        tab_data = malloc(sizeof(Tab));
+        tab_data = (Tab*)malloc(sizeof(Tab));
         if(!tab_data) panic("tab_data allocation failed");
     }
     if (tab_data->strtab_data) free(tab_data->strtab_data);
@@ -130,7 +136,7 @@ void init_ftrace(const char *path)
     *tab_data = parse_args_ftrace(path);
 }
 int tab_depth = 1;
-void call_function(word_t pc,vaddr_t dnpc)
+void call_function(word_t pc,word_t dnpc)
 {
     if(!tab_data || !tab_data->symbols)
     {
@@ -164,7 +170,7 @@ void call_function(word_t pc,vaddr_t dnpc)
     printf("call [%s@0x%08x]\n",name,dnpc);
     
 }
-void ret_function(word_t pc,vaddr_t dnpc)
+void ret_function(word_t pc,word_t dnpc)
 {
     if(!tab_data || !tab_data->symbols)
     {

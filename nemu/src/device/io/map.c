@@ -18,6 +18,10 @@
 #include <memory/vaddr.h>
 #include <device/map.h>
 
+#define LOG_PATH_R    "/home/guanglong/ysyx-workbench/nemu/trace/deviceread_log.txt"
+#define LOG_PATH_W   "/home/guanglong/ysyx-workbench/nemu/trace/devicewrite_log.txt"
+#define MAX_LINES   500
+#define LINE_SIZE   128
 #define IO_SPACE_MAX (32 * 1024 * 1024)
 
 static uint8_t *io_space = NULL;
@@ -46,6 +50,66 @@ static void invoke_callback(io_callback_t c, paddr_t offset, int len, bool is_wr
   if (c != NULL) { c(offset, len, is_write); }
 }
 
+void log_device_read(paddr_t addr,IOMap *map,word_t data)
+{
+  char buffer[MAX_LINES][LINE_SIZE];
+    int line_count = 0;
+    FILE *file = fopen(LOG_PATH_R, "r");
+    if (file) {
+        while (line_count < MAX_LINES && fgets(buffer[line_count], LINE_SIZE, file)) {
+            line_count++;
+        }
+        fclose(file);
+    }
+
+    
+    if (line_count >= MAX_LINES) {
+        memmove(buffer[0], buffer[1], (MAX_LINES - 1) * LINE_SIZE); 
+        line_count--;
+    }
+    snprintf(buffer[line_count], LINE_SIZE, 
+             "pc:0x%08x    device:%8s   data:0x%08x\n", cpu.pc, map->name, data);
+    line_count++;
+
+    
+    file = fopen(LOG_PATH_R, "w");
+    if (!file) panic("Failed to open log file");
+    for (int i = 0; i < line_count; i++) {
+        fputs(buffer[i], file);
+    }
+    fclose(file);
+}
+
+void log_device_write(paddr_t addr,word_t data,IOMap *map)
+{
+  char buffer[MAX_LINES][LINE_SIZE];
+    int line_count = 0;
+    FILE *file = fopen(LOG_PATH_W, "r");
+    if (file) {
+        while (line_count < MAX_LINES && fgets(buffer[line_count], LINE_SIZE, file)) {
+            line_count++;
+        }
+        fclose(file);
+    }
+
+    
+    if (line_count >= MAX_LINES) {
+        memmove(buffer[0], buffer[1], (MAX_LINES - 1) * LINE_SIZE); 
+        line_count--;
+    }
+    snprintf(buffer[line_count], LINE_SIZE, 
+             "pc:0x%08x    device:%8s   data:0x%08x\n", cpu.pc, map->name, data);
+    line_count++;
+
+    
+    file = fopen(LOG_PATH_W, "w");
+    if (!file) panic("Failed to open log file");
+    for (int i = 0; i < line_count; i++) {
+        fputs(buffer[i], file);
+    }
+    fclose(file);
+}
+
 void init_map() {
   io_space = malloc(IO_SPACE_MAX);
   assert(io_space);
@@ -58,6 +122,9 @@ word_t map_read(paddr_t addr, int len, IOMap *map) {
   paddr_t offset = addr - map->low;
   invoke_callback(map->callback, offset, len, false); // prepare data to read
   word_t ret = host_read(map->space + offset, len);
+#ifdef CONFIG_DTRACE
+  log_device_read(addr,map,ret);
+#endif
   return ret;
 }
 
@@ -67,4 +134,7 @@ void map_write(paddr_t addr, int len, word_t data, IOMap *map) {
   paddr_t offset = addr - map->low;
   host_write(map->space + offset, len, data);
   invoke_callback(map->callback, offset, len, true);
+#ifdef CONFIG_DTRACE
+  log_device_write(addr,data,map);
+#endif
 }
